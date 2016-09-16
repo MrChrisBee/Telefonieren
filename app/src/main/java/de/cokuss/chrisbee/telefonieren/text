@@ -1,0 +1,53 @@
+package de.example.frank.telefonieren;
+
+import android.os.Bundle;
+import android.provider.Settings;
+import android.support.v7.app.AppCompatActivity;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
+import android.util.Log;
+import android.widget.TextView;
+
+public class MainActivity extends AppCompatActivity {
+    private static final String LOG = MainActivity.class.getSimpleName();
+    private TelephonyManager mgr;
+    private PhoneStateListener psl;
+    private TextView tv;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        tv = (TextView) findViewById(R.id.tv);
+        mgr = (TelephonyManager)getSystemService(TELEPHONY_SERVICE);
+        psl = new PhoneStateListener(){
+
+            @Override
+            public void onCallStateChanged(int state, String incomingNumber) {
+               // super.onCallStateChanged(state, incomingNumber);
+                tv.setText("Status " + state + " --- " + "Eingehende Nummer: " + incomingNumber + " \n");
+            }
+
+
+            @Override
+            public void onMessageWaitingIndicatorChanged(boolean mwi) {
+                // super.onMessageWaitingIndicatorChanged(mwi);
+                tv.setText("is Changed " + mwi);
+            }
+        };
+        mgr.listen(psl, PhoneStateListener.LISTEN_CALL_STATE);
+        Log.d(LOG, mgr.getDeviceId());
+        Log.d(LOG, Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID));
+
+        try {
+            Log.d(LOG, "SKIP_FIRST_USE_HINTS: " + Settings.Secure.getInt(getContentResolver(), Settings.Secure.SKIP_FIRST_USE_HINTS));
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mgr.listen(psl, PhoneStateListener.LISTEN_NONE);
+    }
+}
